@@ -1,0 +1,10 @@
+[package]
+authors = ["Mathieu Amiot <m.amiot@otak-arts.com>"]
+name = "ocl-image-resizer"
+version = "0.1.0"
+
+[dependencies]
+actix = "0.5.6"
+actix-web = "0.6.5"
+image = "0.19.0"
+ocl = "0.18.0"
