@@ -1,27 +1,22 @@
-const sampler_t samplerIn =
-    CLK_NORMALIZED_COORDS_TRUE |
-    CLK_ADDRESS_CLAMP |
-    CLK_FILTER_LINEAR;
-
-const sampler_t samplerOut =
+__constant sampler_t samplerIn =
     CLK_NORMALIZED_COORDS_FALSE |
-    CLK_ADDRESS_CLAMP |
+    CLK_ADDRESS_NONE |
     CLK_FILTER_NEAREST;
 
 __kernel void resizeImage(
-    __read_only  image2d_t sourceImage,
-    __write_only image2d_t targetImage
+    read_only  image2d_t sourceImage,
+    write_only image2d_t targetImage
 ) {
-    int w = get_image_width(targetImage);
-    int h = get_image_height(targetImage);
+    int inX = get_global_id(0);
+    int inY = get_global_id(1);
+    int2 posIn = {inX, inY};
 
-    int outX = get_global_id(0);
-    int outY = get_global_id(1);
+    int2 target_dim = get_image_dim(targetImage);
+    int2 source_dim = get_image_dim(sourceImage);
+
+    int outX = ((double)inX + 0.4995f) * ((double) target_dim.x / (double) source_dim.x);
+    int outY = ((double)inY + 0.4995f) * ((double) target_dim.y / (double) source_dim.y);
     int2 posOut = {outX, outY};
-
-    float inX = outX / (float) w;
-    float inY = outY / (float) h;
-    float2 posIn = (float2) (inX, inY);
 
     float4 pixel = read_imagef(sourceImage, samplerIn, posIn);
     write_imagef(targetImage, posOut, pixel);
