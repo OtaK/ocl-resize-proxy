@@ -3,12 +3,21 @@ authors = ["Mathieu Amiot <m.amiot@otak-arts.com>"]
 name = "ocl-image-resizer"
 version = "0.1.0"
 
+[[bin]]
+name = "ocl-resizer-cli"
+path = "src/cli.rs"
+
+[[bin]]
+name = "ocl-resizer-server"
+path = "src/server.rs"
+
 [dependencies]
-actix = "0.5.6"
-actix-web = "0.6.5"
-clap = "2.31.2"
-env_logger = "0.5.10"
-futures = "0.1.2"
-image = "0.19.0"
-log = "0.4.1"
-ocl = "0.18.0"
+actix = "0.5"
+actix-web = "0.6"
+clap = "2.32"
+env_logger = "0.5"
+failure = "0.1.1"
+futures = "0.1"
+image = "0.19"
+log = "0.4"
+ocl = "0.18"

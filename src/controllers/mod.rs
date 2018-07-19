@@ -1,2 +1,1 @@
-mod resize;
-pub use self::resize::*;
+pub mod resize;
