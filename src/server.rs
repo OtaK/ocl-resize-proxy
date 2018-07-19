@@ -9,6 +9,7 @@ extern crate image;
 extern crate ocl;
 #[macro_use]
 extern crate failure;
+extern crate percent_encoding;
 
 mod actors;
 mod controllers;

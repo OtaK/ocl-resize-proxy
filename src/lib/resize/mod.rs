@@ -32,6 +32,7 @@ pub fn ocl_resize_image_with_proque(
     h: u32,
 ) -> ocl::Result<image::DynamicImage> {
     let dims = img.dimensions();
+    let (new_w, new_h) = resize_dimensions(dims.0, dims.1, w, h, false);
     program.set_dims(dims);
     let img_buf = img.to_rgba();
     let img_pixels = img_buf.clone().into_vec();
@@ -47,7 +48,7 @@ pub fn ocl_resize_image_with_proque(
         .build()?;
 
     let mut result_unrolled: image::ImageBuffer<image::Rgba<u8>, Vec<u8>> =
-        image::ImageBuffer::new(w, h);
+        image::ImageBuffer::new(new_w, new_h);
 
     let cl_dest_unrolled = Image::<u8>::builder()
         .channel_order(ImageChannelOrder::Rgba)
@@ -59,10 +60,16 @@ pub fn ocl_resize_image_with_proque(
         .copy_host_slice(&result_unrolled)
         .build()?;
 
+    let work_size = if dims.0 * dims.1 > new_w * new_h {
+        dims
+    } else {
+        (new_w, new_h)
+    };
+
     let kernel = program
         .kernel_builder("resizeImage")
         .queue(program.queue().clone())
-        .global_work_size(&dims)
+        .global_work_size(work_size)
         .arg(&cl_source)
         .arg(&cl_dest_unrolled)
         .build()?;
@@ -73,4 +80,41 @@ pub fn ocl_resize_image_with_proque(
     program.queue().finish()?;
     cl_dest_unrolled.read(&mut result_unrolled).enq()?;
     Ok(image::DynamicImage::ImageRgba8(result_unrolled))
+}
+
+fn resize_dimensions(width: u32, height: u32, nwidth: u32, nheight: u32, fill: bool) -> (u32, u32) {
+    let ratio = width as u64 * nheight as u64;
+    let nratio = nwidth as u64 * height as u64;
+
+    let use_width = if fill {
+        nratio > ratio
+    } else {
+        nratio <= ratio
+    };
+
+    let intermediate = if use_width {
+        height as u64 * nwidth as u64 / width as u64
+    } else {
+        width as u64 * nheight as u64 / height as u64
+    };
+
+    if use_width {
+        if intermediate <= ::std::u32::MAX as u64 {
+            (nwidth, intermediate as u32)
+        } else {
+            (
+                (nwidth as u64 * ::std::u32::MAX as u64 / intermediate) as u32,
+                ::std::u32::MAX,
+            )
+        }
+    } else {
+        if intermediate <= ::std::u32::MAX as u64 {
+            (intermediate as u32, nheight)
+        } else {
+            (
+                ::std::u32::MAX,
+                (nheight as u64 * ::std::u32::MAX as u64 / intermediate) as u32,
+            )
+        }
+    }
 }
