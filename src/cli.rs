@@ -1,4 +1,3 @@
-#[allow(unused_imports)]
 #[macro_use]
 extern crate log;
 extern crate clap;
@@ -11,9 +10,8 @@ use self::lib::*;
 
 use clap::App;
 use image::GenericImage;
-use std::fmt;
 use std::fs::File;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 fn main() {
     env_logger::init();
@@ -34,7 +32,7 @@ fn main() {
     let img = image::open(file).unwrap();
 
     let dims = img.dimensions();
-    let h = dims.1 as f64 * (w as f64 / dims.0 as f64);
+    let h = f64::from(dims.1) * (w / f64::from(dims.0));
     info!("resizing to {}x{} from {}x{}", w, h, dims.0, dims.1);
     let timer = Instant::now();
     let new_img = ocl_resize_image(&img, w as u32, h as u32).unwrap();

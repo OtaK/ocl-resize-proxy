@@ -12,7 +12,6 @@ fn main() {}
 mod bench {
     use image;
     use lib::*;
-    use ocl::*;
     use test::Bencher;
 
     #[bench]
