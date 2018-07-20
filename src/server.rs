@@ -38,8 +38,7 @@ fn main() {
 
     env::set_var("RUST_LOG", "actix_web=info");
 
-    let ocl_addr: Addr<Syn, OCLExecutorSync> =
-        OCLExecutorSync::start(4, || proque!((0., 0.)).unwrap());
+    let ocl_addr: Addr<Syn, OCLExecutorSync> = OCLExecutorSync::start(4, || proque!().unwrap());
 
     server::new(move || {
         App::with_state(ResizerState {

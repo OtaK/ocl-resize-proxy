@@ -11,6 +11,10 @@ path = "src/cli.rs"
 name = "ocl-resizer-server"
 path = "src/server.rs"
 
+[[bin]]
+name = "ocl-resizer-bench"
+path = "src/bench.rs"
+
 [dependencies]
 actix = "0.5"
 clap = "2.32"

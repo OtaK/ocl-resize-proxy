@@ -7,10 +7,10 @@ use ocl::{
 
 #[macro_export]
 macro_rules! proque {
-    ($dims:expr) => {{
+    () => {{
         use lib::KERNEL_SRC;
         use ocl::ProQue;
-        ProQue::builder().src(KERNEL_SRC).dims(&$dims).build()
+        ProQue::builder().src(KERNEL_SRC).build()
     }};
 }
 
@@ -20,8 +20,7 @@ pub fn ocl_resize_image(
     w: u32,
     h: u32,
 ) -> ocl::Result<image::DynamicImage> {
-    let dims = img.dimensions();
-    let mut program = proque!(dims)?;
+    let mut program = proque!()?;
     ocl_resize_image_with_proque(&mut program, img, w, h)
 }
 
@@ -34,24 +33,24 @@ pub fn ocl_resize_image_with_proque(
     let dims = img.dimensions();
     let (new_w, new_h) = resize_dimensions(dims.0, dims.1, w, h, false);
     program.set_dims(dims);
-    let img_buf = img.to_rgba();
-    let img_pixels = img_buf.clone().into_vec();
+    let img_buf = img.as_rgb8().unwrap();
+    //let img_pixels = img_buf.clone().into_vec();
 
     let cl_source = Image::<u8>::builder()
-        .channel_order(ImageChannelOrder::Rgba)
+        .channel_order(ImageChannelOrder::Rgb)
         .channel_data_type(ImageChannelDataType::UnormInt8)
         .image_type(MemObjectType::Image2d)
         .dims(&dims)
         .flags(ocl::flags::MEM_READ_ONLY)
         .queue(program.queue().clone())
-        .copy_host_slice(&img_pixels)
+        .copy_host_slice(img_buf)
         .build()?;
 
-    let mut result_unrolled: image::ImageBuffer<image::Rgba<u8>, Vec<u8>> =
+    let mut result_unrolled: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> =
         image::ImageBuffer::new(new_w, new_h);
 
     let cl_dest_unrolled = Image::<u8>::builder()
-        .channel_order(ImageChannelOrder::Rgba)
+        .channel_order(ImageChannelOrder::Rgb)
         .channel_data_type(ImageChannelDataType::UnormInt8)
         .image_type(MemObjectType::Image2d)
         .dims(result_unrolled.dimensions())
@@ -78,7 +77,7 @@ pub fn ocl_resize_image_with_proque(
     }
     program.queue().finish()?;
     cl_dest_unrolled.read(&mut result_unrolled).enq()?;
-    Ok(image::DynamicImage::ImageRgba8(result_unrolled))
+    Ok(image::DynamicImage::ImageRgb8(result_unrolled))
 }
 
 fn resize_dimensions(width: u32, height: u32, nwidth: u32, nheight: u32, fill: bool) -> (u32, u32) {
