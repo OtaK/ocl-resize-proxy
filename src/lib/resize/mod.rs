@@ -60,11 +60,10 @@ pub fn ocl_resize_image_with_proque(
         .copy_host_slice(&result_unrolled)
         .build()?;
 
-    let work_size = if dims.0 * dims.1 > new_w * new_h {
-        dims
-    } else {
-        (new_w, new_h)
-    };
+    let work_size = (
+        ::std::cmp::max(dims.0, new_w),
+        ::std::cmp::max(dims.1, new_h),
+    );
 
     let kernel = program
         .kernel_builder("resizeImage")
